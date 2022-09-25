@@ -10,6 +10,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Formatting = Newtonsoft.Json.Formatting;
 using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 
 namespace LAB03_EDII
 {
@@ -108,18 +109,62 @@ namespace LAB03_EDII
                 }
             }
             string dpi;
-            string rutaguardar;
+            string rutesave;
+            string ruteletters;
+            string rutelettercomp;
             Console.WriteLine("Escriba el DPI que desea buscar");
             dpi = Console.ReadLine();
-            Ingreso solicitantebus = new Ingreso();
-            Ingreso solicitantefin = new Ingreso();
-            solicitantebus.dpi = dpi;
-            solicitantefin = solicitante.Search(solicitantebus, ComparacioDPI);
+            Ingreso solicitudesearch = new Ingreso();
+            Ingreso solicitudend = new Ingreso();
+            solicitudesearch.dpi = dpi;
+            solicitudend = solicitante.Search(solicitudesearch, ComparacioDPI);
             Console.WriteLine("Escriba donde guardar el archivo");
-            rutaguardar = Console.ReadLine();
+            rutesave = Console.ReadLine();
             List<Ingreso> solicitantelist = new List<Ingreso>();
-            solicitantelist.Add(solicitantefin);
-            Serializacion2(solicitantelist, rutaguardar);
+            solicitantelist.Add(solicitudend);
+            Serializacion2(solicitantelist, rutesave);
+            Console.WriteLine("Escriba el directorio con las cartas");
+            ruteletters = Console.ReadLine();
+            Console.WriteLine("Escriba el directorio donde guardar las cartas comprimidas");
+            rutelettercomp = Console.ReadLine();
+            string[] files = Directory.GetFiles(ruteletters);
+            Regex regex = new Regex(@"REC-" + dpi);
+            int numcart = 1;
+            foreach (string file in files)
+            {
+                Match match = regex.Match(file);
+                if (match.Success)
+                {
+                    string text = System.IO.File.ReadAllText(file);
+                    List<int> compress = Compress(text);
+                    string rutecompress = rutelettercomp +"\\"+"compressed-REC-" + dpi + "-" + Convert.ToString(numcart) + ".txt";
+                    string ingreso = JsonConvert.SerializeObject(compress);
+                    File.WriteAllText(rutecompress, ingreso);
+                    Console.WriteLine(file);
+                    numcart++;
+                }
+            }
+            Console.WriteLine("Ingrese la carpeta con las cartas para probar la decodificación");
+            string ruteencodecart = Console.ReadLine();
+            string[] compressfiles = Directory.GetFiles(ruteencodecart);
+            Console.WriteLine("Escriba el directorio donde guardar las cartas comprimidas");
+            string ruteletterdecode = Console.ReadLine();
+            Regex regex2 = new Regex(@"compressed-REC-" + dpi);
+            int letternum = 1;
+            foreach(string cfile in compressfiles) 
+            {
+                Match m = regex2.Match(cfile);
+                if (m.Success) 
+                {
+                    var reader2 = new StreamReader(File.OpenRead(cfile));
+                    List<int> compress = JsonConvert.DeserializeObject<List<int>>(reader2.ReadLine());
+                    string decompress = Decompress(compress);
+                    string rutedecompress = ruteletterdecode + "\\" + "decompressed-REC-" + dpi + "-" + Convert.ToString(letternum) + ".txt";
+                    File.WriteAllText(rutedecompress, decompress);
+                    letternum++;
+                }
+            }
+            Console.ReadKey();
         }
         public static bool ComparacioDPI(Ingreso paciente, string operador, Ingreso paciente2)
         {
@@ -142,6 +187,69 @@ namespace LAB03_EDII
         {
             string solictanteJson = JsonConvert.SerializeObject(Lista.ToArray(), Formatting.Indented);
             File.WriteAllText(path, solictanteJson);
+        }
+        public static List<int> Compress(string uncompressed)
+        {
+            // build the dictionary
+            Dictionary<string, int> dictionary = new Dictionary<string, int>();
+            for (int i = 0; i < 256; i++)
+                dictionary.Add(((char)i).ToString(), i);
+
+            string w = string.Empty;
+            List<int> compressed = new List<int>();
+
+            foreach (char c in uncompressed)
+            {
+                string wc = w + c;
+                if (dictionary.ContainsKey(wc))
+                {
+                    w = wc;
+                }
+                else
+                {
+                    // write w to output
+                    compressed.Add(dictionary[w]);
+                    // wc is a new sequence; add it to the dictionary
+                    dictionary.Add(wc, dictionary.Count);
+                    w = c.ToString();
+                }
+            }
+
+            // write remaining output if necessary
+            if (!string.IsNullOrEmpty(w))
+                compressed.Add(dictionary[w]);
+
+            return compressed;
+        }
+
+        public static string Decompress(List<int> compressed)
+        {
+            // build the dictionary
+            Dictionary<int, string> dictionary = new Dictionary<int, string>();
+            for (int i = 0; i < 256; i++)
+                dictionary.Add(i, ((char)i).ToString());
+
+            string w = dictionary[compressed[0]];
+            compressed.RemoveAt(0);
+            StringBuilder decompressed = new StringBuilder(w);
+
+            foreach (int k in compressed)
+            {
+                string entry = null;
+                if (dictionary.ContainsKey(k))
+                    entry = dictionary[k];
+                else if (k == dictionary.Count)
+                    entry = w + w[0];
+
+                decompressed.Append(entry);
+
+                // new sequence; add it to the dictionary
+                dictionary.Add(dictionary.Count, w + entry[0]);
+
+                w = entry;
+            }
+
+            return decompressed.ToString();
         }
     }
 }
