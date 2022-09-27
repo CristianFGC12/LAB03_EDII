@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using LAB03_EDII.Models;
 using ARBOL_AVL;
-using System.Xml;
 using System.IO;
 using Newtonsoft.Json;
 using Formatting = Newtonsoft.Json.Formatting;
@@ -63,11 +62,10 @@ namespace LAB03_EDII
                         if (match.Success)
                         {
                             string text = System.IO.File.ReadAllText(file);
-                            List<int> compress = Compress(text);
+                            List<int> compress = LZW.Method.Compress(text);
                             string rutecompress = rutelettercomp + "\\" + "compressed-REC-" + dpicomp + "-" + Convert.ToString(numcart) + ".txt";
                             string ingresocomp = JsonConvert.SerializeObject(compress);
                             File.WriteAllText(rutecompress, ingresocomp);
-                            Console.WriteLine(file);
                             numcart++;
                         }
                     }
@@ -155,7 +153,7 @@ namespace LAB03_EDII
                 {
                     var reader2 = new StreamReader(File.OpenRead(cfile));
                     List<int> compress = JsonConvert.DeserializeObject<List<int>>(reader2.ReadLine());
-                    string decompress = Decompress(compress);
+                    string decompress = LZW.Method.Decompress(compress);
                     string rutedecompress = ruteletterdecode + "\\" + "decompressed-REC-" + dpi + "-" + Convert.ToString(letternum) + ".txt";
                     File.WriteAllText(rutedecompress, decompress);
                     letternum++;
@@ -184,69 +182,6 @@ namespace LAB03_EDII
         {
             string solictanteJson = JsonConvert.SerializeObject(Lista.ToArray(), Formatting.Indented);
             File.WriteAllText(path, solictanteJson);
-        }
-        public static List<int> Compress(string uncompressed)
-        {
-            // build the dictionary
-            Dictionary<string, int> dictionary = new Dictionary<string, int>();
-            for (int i = 0; i < 256; i++)
-                dictionary.Add(((char)i).ToString(), i);
-
-            string w = string.Empty;
-            List<int> compressed = new List<int>();
-
-            foreach (char c in uncompressed)
-            {
-                string wc = w + c;
-                if (dictionary.ContainsKey(wc))
-                {
-                    w = wc;
-                }
-                else
-                {
-                    // write w to output
-                    compressed.Add(dictionary[w]);
-                    // wc is a new sequence; add it to the dictionary
-                    dictionary.Add(wc, dictionary.Count);
-                    w = c.ToString();
-                }
-            }
-
-            // write remaining output if necessary
-            if (!string.IsNullOrEmpty(w))
-                compressed.Add(dictionary[w]);
-
-            return compressed;
-        }
-
-        public static string Decompress(List<int> compressed)
-        {
-            // build the dictionary
-            Dictionary<int, string> dictionary = new Dictionary<int, string>();
-            for (int i = 0; i < 256; i++)
-                dictionary.Add(i, ((char)i).ToString());
-
-            string w = dictionary[compressed[0]];
-            compressed.RemoveAt(0);
-            StringBuilder decompressed = new StringBuilder(w);
-
-            foreach (int k in compressed)
-            {
-                string entry = null;
-                if (dictionary.ContainsKey(k))
-                    entry = dictionary[k];
-                else if (k == dictionary.Count)
-                    entry = w + w[0];
-
-                decompressed.Append(entry);
-
-                // new sequence; add it to the dictionary
-                dictionary.Add(dictionary.Count, w + entry[0]);
-
-                w = entry;
-            }
-
-            return decompressed.ToString();
         }
     }
 }

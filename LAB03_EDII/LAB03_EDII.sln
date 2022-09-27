@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LAB03_EDII", "LAB03_EDII\LA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Huffman", "Huffman\Huffman.csproj", "{B8BE2B0D-AC6B-4BD0-9C41-B367F078F8DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LZW", "LZW\LZW.csproj", "{46342C02-5005-4FA7-B194-0CDADFCDAB0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{B8BE2B0D-AC6B-4BD0-9C41-B367F078F8DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8BE2B0D-AC6B-4BD0-9C41-B367F078F8DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8BE2B0D-AC6B-4BD0-9C41-B367F078F8DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46342C02-5005-4FA7-B194-0CDADFCDAB0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46342C02-5005-4FA7-B194-0CDADFCDAB0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46342C02-5005-4FA7-B194-0CDADFCDAB0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46342C02-5005-4FA7-B194-0CDADFCDAB0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
