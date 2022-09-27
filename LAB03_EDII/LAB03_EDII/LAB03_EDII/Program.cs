@@ -22,6 +22,10 @@ namespace LAB03_EDII
             string ruta = "";
             Console.WriteLine("Ingrese la direccion de archvio");
             ruta = Console.ReadLine();
+            Console.WriteLine("Escriba el directorio con las cartas");
+            string ruteletters = Console.ReadLine();
+            Console.WriteLine("Escriba el directorio donde guardar las cartas comprimidas");
+            string rutelettercomp = Console.ReadLine();
             var reader = new StreamReader(File.OpenRead(ruta));
             while (!reader.EndOfStream)
             {
@@ -48,7 +52,25 @@ namespace LAB03_EDII
                     ingreso.address = trabajar.address;
                     ingreso.dateBirth = trabajar.dateBirth;
                     ingreso.companies = companias;
+                    string dpicomp = ingreso.dpi;
                     solicitante.insert(ingreso, ComparacioDPI);
+                    string[] files = Directory.GetFiles(ruteletters);
+                    Regex regex = new Regex(@"REC-" + dpicomp);
+                    int numcart = 1;
+                    foreach (string file in files)
+                    {
+                        Match match = regex.Match(file);
+                        if (match.Success)
+                        {
+                            string text = System.IO.File.ReadAllText(file);
+                            List<int> compress = Compress(text);
+                            string rutecompress = rutelettercomp + "\\" + "compressed-REC-" + dpicomp + "-" + Convert.ToString(numcart) + ".txt";
+                            string ingresocomp = JsonConvert.SerializeObject(compress);
+                            File.WriteAllText(rutecompress, ingresocomp);
+                            Console.WriteLine(file);
+                            numcart++;
+                        }
+                    }
 
                 }
                 else if (value[0] == "PATCH")
@@ -110,8 +132,6 @@ namespace LAB03_EDII
             }
             string dpi;
             string rutesave;
-            string ruteletters;
-            string rutelettercomp;
             Console.WriteLine("Escriba el DPI que desea buscar");
             dpi = Console.ReadLine();
             Ingreso solicitudesearch = new Ingreso();
@@ -123,31 +143,8 @@ namespace LAB03_EDII
             List<Ingreso> solicitantelist = new List<Ingreso>();
             solicitantelist.Add(solicitudend);
             Serializacion2(solicitantelist, rutesave);
-            Console.WriteLine("Escriba el directorio con las cartas");
-            ruteletters = Console.ReadLine();
-            Console.WriteLine("Escriba el directorio donde guardar las cartas comprimidas");
-            rutelettercomp = Console.ReadLine();
-            string[] files = Directory.GetFiles(ruteletters);
-            Regex regex = new Regex(@"REC-" + dpi);
-            int numcart = 1;
-            foreach (string file in files)
-            {
-                Match match = regex.Match(file);
-                if (match.Success)
-                {
-                    string text = System.IO.File.ReadAllText(file);
-                    List<int> compress = Compress(text);
-                    string rutecompress = rutelettercomp +"\\"+"compressed-REC-" + dpi + "-" + Convert.ToString(numcart) + ".txt";
-                    string ingreso = JsonConvert.SerializeObject(compress);
-                    File.WriteAllText(rutecompress, ingreso);
-                    Console.WriteLine(file);
-                    numcart++;
-                }
-            }
-            Console.WriteLine("Ingrese la carpeta con las cartas para probar la decodificación");
-            string ruteencodecart = Console.ReadLine();
-            string[] compressfiles = Directory.GetFiles(ruteencodecart);
-            Console.WriteLine("Escriba el directorio donde guardar las cartas comprimidas");
+            string[] compressfiles = Directory.GetFiles(rutelettercomp);
+            Console.WriteLine("Escriba el directorio donde guardar las cartas descomprimidas");
             string ruteletterdecode = Console.ReadLine();
             Regex regex2 = new Regex(@"compressed-REC-" + dpi);
             int letternum = 1;
